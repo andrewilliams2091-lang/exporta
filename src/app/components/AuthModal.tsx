@@ -3,6 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import { X, ChevronDown, Loader2 } from "lucide-react";
 
+
+interface RestCountry {
+  name: {
+    common: string;
+  };
+  cca2: string;
+  idd?: {
+    root?: string;
+    suffixes?: string[];
+  };
+  flags: {
+    png: string;
+  };
+}
+
+
 interface AuthModalProps {
   open: boolean;
   onClose: () => void;
@@ -51,7 +67,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
     fetch("https://restcountries.com/v3.1/all?fields=name,cca2,idd,flags")
       .then(res => res.json())
-      .then((data: any[]) => {
+     .then((data: RestCountry[]) => {
         const normalized = data
           .map((c): Country | null => {
             if (!c.idd?.root || !c.idd?.suffixes?.length) return null;
