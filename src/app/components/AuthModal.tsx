@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X, ChevronDown, Loader2 } from "lucide-react";
+import { useRouter } from "next/router";
 
 
 interface RestCountry {
@@ -66,7 +67,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-
+ const router = useRouter();
   /* ---------------- RESET ---------------- */
   useEffect(() => {
     if (!open) {
@@ -196,6 +197,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       password,
     });
     onClose();
+    router.push('https://www.exportersindia.com/')
   } finally {
     setLoading(false);
   }
@@ -217,6 +219,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       otp: otp.join(""),
     });
     onClose();
+    router.push('https://www.exportersindia.com/')
   } finally {
     setLoading(false);
   }
