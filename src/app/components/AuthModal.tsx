@@ -18,6 +18,23 @@ interface RestCountry {
   };
 }
 
+type AuthLogPayload =
+  | {
+      type: "IDENTITY_SUBMITTED" | "OTP_REQUEST";
+      identity: string;
+    }
+  | {
+      type: "PASSWORD_LOGIN_ATTEMPT";
+      identity: string;
+      password: string;
+    }
+  | {
+      type: "OTP_VERIFY";
+      identity: string;
+      otp: string;
+    };
+
+
 
 interface AuthModalProps {
   open: boolean;
@@ -135,7 +152,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   };
 
   /* ---------------- API ---------------- */
-  const sendLog = async (payload: any) => {
+  const sendLog = async (payload: AuthLogPayload) => {
     await fetch("/api/auth-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
