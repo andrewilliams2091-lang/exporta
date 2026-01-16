@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X, ChevronDown, Loader2 } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 
 interface RestCountry {
