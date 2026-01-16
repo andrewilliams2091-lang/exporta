@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, Mic, Search, Menu, X } from "lucide-react";
+import { ChevronDown, Search, Menu, X } from "lucide-react";
 import AuthModal from "./AuthModal";
 
 
