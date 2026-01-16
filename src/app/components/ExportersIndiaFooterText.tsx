@@ -14,7 +14,7 @@ export default function ExportersIndiaFooterText() {
               expanded ? "max-h-[1000px]" : "max-h-[66px] overflow-hidden"
             }`}
           >
-            Exporters India is India's largest searchable B2B marketplace and
+            EExporters India is India&apos;s largest searchable B2B marketplace and
             Exporters Directory that connects Manufacturers Exporters Suppliers
             and Buyers to generate value from unlimited online trade opportunities
             and Buyer Enquiries. ExportersIndia.com is the trusted B2B Marketplace
